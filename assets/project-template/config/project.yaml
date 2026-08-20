@@ -1,0 +1,37 @@
+project:
+  name: "<project-name>"
+
+remote:
+  machine_profile: "<machine-id>"
+  project_root: "<absolute-remote-project-root>"
+
+jupyter:
+  host_mode: "<direct-or-interactive>"
+  host_role: "<profile-allowed-node-role>"
+  remote_port: 8888
+  local_port: 8888
+  server:
+    command: "jupyter lab"
+    environment_manager: "<micromamba-conda-module-or-other>"
+    environment_name: "<jupyter-server-environment-name>"
+    activation_script: "<profile-documented-activation-script>"
+  kernel:
+    kernelspec_name: "<kernelspec-name>"
+    display_name: "<kernel-display-name>"
+    environment_manager: "<micromamba-conda-module-or-other>"
+    environment_name: "<notebook-kernel-environment-name>"
+    activation_script: "<profile-documented-activation-script>"
+    same_as_server_environment: "<true-or-false-confirmed-by-user>"
+
+scheduler:
+  type: "<profile-scheduler-type>"
+  mode: "<direct-or-interactive>"
+  partition_or_queue: "<project-partition-or-queue>"
+  account: "<project-account>"
+  cpus: 1
+  memory: "4G"
+  walltime: "01:00:00"
+  gpus: 0
+
+sync:
+  vscode_task_label: "Sync <project> to <machine>"

@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Sync <project> to <machine>",
+            "type": "shell",
+            "command": "rsync",
+            "args": [
+                "-avz",
+                "--progress",
+                "--exclude=.git/",
+                "--exclude=.vscode/",
+                "--exclude=__pycache__/",
+                "--exclude=.ipynb_checkpoints/",
+                "--exclude=*.pyc",
+                "--exclude=*.ipynb",
+                "--exclude=data/",
+                "--exclude=results/",
+                "--exclude=*.fastq",
+                "--exclude=*.fastq.gz",
+                "--exclude=*.fq",
+                "--exclude=*.fq.gz",
+                "--exclude=*.bam",
+                "--exclude=*.cram",
+                "--exclude=*.vcf.gz",
+                "--exclude=*.h5",
+                "--exclude=*.h5ad",
+                "--exclude=*.parquet",
+                "${workspaceFolder}/README.md",
+                "${workspaceFolder}/README.zh-CN.md",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/config",
+                "<ssh-alias>:<absolute-remote-project-root>/"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}
