@@ -3,7 +3,7 @@
     "tasks": [
         {
             "label": "Sync <project> to <machine>",
-            "type": "shell",
+            "type": "process",
             "command": "rsync",
             "args": [
                 "-avz",

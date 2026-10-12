@@ -2,11 +2,13 @@
 
 Read this guide completely before starting, reconnecting, diagnosing, or stopping remote Jupyter. Use `remote-hpc-operator` throughout; its machine profile and software policy are authoritative.
 
+This is the escalation path for an explicitly requested agent-operated action. The normal project workflow is user-managed: project setup generates private bilingual `JUPYTER_START` guides containing the verified startup, tunnel, VS Code, and shutdown commands. Do not proactively launch a service when those guides are sufficient.
+
 ## Preconditions and Authorization
 
 Do not start until `config/project.yaml` passes the readiness gate in [project-setup.md](project-setup.md).
 
-When no Jupyter connection has been verified in the current project work stage, offer once to establish it. Show:
+When the user explicitly asks Codex to establish the connection, show and confirm:
 
 - machine profile and remote project root;
 - Jupyter server environment and command;
@@ -15,7 +17,7 @@ When no Jupyter connection has been verified in the current project work stage, 
 - scheduler resources when applicable;
 - local and remote ports.
 
-The user's confirmation authorizes this exact infrastructure setup. It does not authorize notebook cells, analysis commands, pipelines, or batch jobs. If the user declines, continue preparation without remote changes and do not ask again during the same work stage.
+The user's confirmation authorizes this exact infrastructure setup. It does not authorize notebook cells, analysis commands, pipelines, or batch jobs. If the user does not explicitly request startup, provide or update the private guide and continue preparation without remote changes.
 
 ## Verified Startup Sequence
 

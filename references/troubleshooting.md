@@ -1,5 +1,7 @@
 # Troubleshooting
 
+For ordinary startup, begin with the project-root private `JUPYTER_START.md` or `JUPYTER_START.zh-CN.md`. These files should reflect the current `config/project.yaml` and machine profile. If they contain placeholders, stale paths, or an obsolete SSH topology, repair both language versions and the root `.gitignore` before diagnosing the runtime service.
+
 Use this guide to diagnose the local VS Code to remote Jupyter workflow. Gather evidence from the least invasive layer first; do not change remote state merely to test a theory.
 
 ## 1. Establish Context
@@ -70,6 +72,8 @@ Common import causes:
 - wrong kernelspec/environment;
 - dependency absent from the documented environment;
 - package state incompatible with autoreload.
+
+If results seem stale despite successful synchronization, inspect the expected output paths and the cache-reuse branch. Verify required files/columns and available input/parameter metadata. Distinguish stale results from stale source code; identify which outputs need explicit recomputation and downstream reruns, without deleting them or launching computation as a diagnostic shortcut.
 
 Any dependency installation or environment repair must follow `remote-hpc-operator` software policy.
 

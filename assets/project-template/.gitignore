@@ -1,0 +1,20 @@
+# Private local Jupyter startup instructions and runtime state
+/JUPYTER_START.md
+/JUPYTER_START.zh-CN.md
+
+# Private machine-specific settings; keep sanitized examples shareable
+/config/project.yaml
+/.vscode/tasks.json
+
+# Scientific data, results, and runtime output
+/data/
+/results/
+/logs/
+/runs/
+
+# Local environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
