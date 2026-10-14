@@ -4,7 +4,7 @@ Use this guide when creating or editing notebooks and their nearby `src/` files.
 
 For explicit whole-project style unification, also read [project-style-unification.md](project-style-unification.md): migrate one notebook and its source dependencies, then verify and obtain user acceptance before committing and advancing. Ordinary edits do not trigger that workflow.
 
-For notebook creation or substantial structural edits, first read [style_example.ipynb](../assets/project-template/notebooks/style_example.ipynb). It demonstrates paired English/Chinese narrative, remote initialization, focused input loading, step-local parameters and cache handling, separate plotting, and interpretation without invented findings. It has no executed outputs. Use relevant sections for small edits; preserve unrelated existing style and never execute or copy the example automatically. Apply the user's conventions to the changed portions, then perform the authoring self-review in `SKILL.md` before handoff.
+For notebook creation or substantial structural edits, first read [style_example.ipynb](../assets/project-template/notebooks/style_example.ipynb). It demonstrates concise paired English/Chinese narrative, scientific section hierarchy, short operation cues, remote initialization, step-local parameters and result reuse, separate plotting, and bilingual figure captions without invented findings. It has no executed outputs. Use relevant sections for small edits; preserve unrelated existing style and never execute or copy the example automatically. Apply the user's conventions to the changed portions, then perform the authoring self-review in `SKILL.md` before handoff.
 
 ## Research Record
 
@@ -26,11 +26,25 @@ Prefer a small sequence of meaningful Markdown and code cells over a software-st
 - Before code, briefly state the scientific question or operation. A heading may be sufficient for an obvious routine step; do not repeat a full purpose/input/method/output template for every cell.
 - Expand explanations where scientific meaning depends on coordinate systems, units, denominators, overlap handling, missing data, filtering, or parameter rationale. Cite supplied provenance near the relevant input; do not invent sources.
 - Keep heading levels and numbering consistent with neighboring sections when inserting or splitting material.
-- After important code, explain how the user should interpret the expected output.
+- After important plots, explain how to read the figure in its bilingual caption. Add a separate interpretation paragraph only when it contributes scientific reasoning beyond the caption; ordinary calculation cells do not require a repeated explanation.
 - Explain filtering and parameter choices only where needed to understand the biological analysis; do not narrate implementation settings.
 - Preserve uncertainty and say what observation would resolve it.
 - Keep saved outputs when they remain consistent with the code.
 - When code changes make an old output misleading, clear only the affected output or tell the user to rerun that cell; do not imply the new output already exists.
+
+### Section hierarchy and operation cues
+
+Use `#` for the notebook title, `## 1` for a major scientific section, `### 1.1` for its subsection, and `#### 1.1.1` when a further scientific subdivision helps navigation. Increase heading depth with numbering depth, keep English/Chinese pairs identical in level and number, and avoid parent/child titles that repeat the same topic. Unnumbered setup headings may stand before the numbered scientific sections.
+
+Within a scientific subsection, prefer a short bullet such as `- LD-pruned SNP panel` or a standalone cue such as `Calculate statistics in 500 bp windows`. These are operations, not mandatory new subsections. Do not create a heading for every parameter definition, result load or plotting call. Introduce each operation only as much as a research reader needs; one or two sentences are normally enough.
+
+### Figure captions
+
+Use the sequence: English/Chinese scientific heading and brief purpose, calculation cells, plotting cell with displayed output, English figure caption, Chinese figure caption. Simple load-and-plot operations may use one plotting cell. Keep caption pairs immediately after the relevant plotting cell, with separate Markdown cells and matching figure numbers.
+
+Number principal figures consecutively within the notebook. A caption starts with a bold number and concise scientific title, for example `**Figure 1. Chromosomal distribution of nucleotide diversity.**` and `**图 1. 核苷酸多样性沿染色体的分布。**`. Simple figures may need only that sentence. Explain panel or track order, colors, symbols, units, denominators or thresholds for more complex figures when they are needed to read them. Describe what is plotted rather than restating the calculation pipeline. Captions can carry the essential reading guidance instead of a separate "Reading the figure" subsection.
+
+Use natural scientific terminology in each language. Parentheses introduce useful abbreviations or definitions, not editing hints; for example use `Kinship` in English and `亲缘关系` in Chinese. Omit generic caveats and repeated technical detail, while retaining limitations or definitions that materially change interpretation. Figure captions and short narrative do not replace the required export of actual plotted data.
 
 ## Bilingual Narrative Cells
 
@@ -48,6 +62,8 @@ Keep each pair semantically aligned:
 - preserve the same scientific claims, uncertainty, relevant scientific parameters, methodological definitions, and interpretation; do not add implementation details in either language;
 - translate prose naturally rather than mechanically, without adding facts to only one language;
 - update both cells whenever either member's meaning changes.
+
+When the user edits Chinese Markdown and names it as the standard, treat that text as authoritative for scope, tone and detail. Revise the English to match additions and deletions, including headings and figure captions; do not preserve English-only explanations from an older draft. A natural translation need not mirror word order. If the requested wording conflicts with known scientific inputs or behavior, identify the conflict and make the smallest necessary correction without inventing findings.
 
 For an existing monolingual notebook, create the missing language partner next to each Markdown cell touched by the current request. Preserve untouched historical cells unless the user asks to convert the whole notebook.
 
