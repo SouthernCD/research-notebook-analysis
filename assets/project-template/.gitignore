@@ -18,3 +18,16 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 .DS_Store
+
+# Tool environments, caches, build artifacts, and runtime files at any depth
+venv/
+.env/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+logs/
+runs/

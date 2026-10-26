@@ -16,7 +16,9 @@ Identify this project's first notebook and its input preparation here. State whi
 
 1. `notebooks/01_<step>.ipynb` — Current research step and expected output.
 
-List only notebooks that are already justified by the research plan.
+List only notebooks that are already justified by the research plan. Number them by scientific stage and dependency order; keep the directory tree shallow and add files only for current needs.
+
+During analysis and debugging, each working notebook contains adjacent English/Chinese narrative cells and one shared set of code cells. Only at final publication preparation may separate language directories be useful; they are optional publication copies derived from the same finalized bilingual source, with identical code and corresponding sections/figures.
 
 ## Data and reproducibility boundary
 
@@ -27,11 +29,47 @@ Describe the actual source inputs, their provenance and acquisition, the startin
 
 Scientific parameters are normally stated near their use in notebooks. Shared definitions may live in `config/` when reused across analyses; document their authoritative source.
 
+## Analysis implementation
+
+Keep short analysis code in notebooks and project-specific helpers or plotting in project-root `src/`. When a complete analysis tool needs an independent interface and internal structure, place it under `tools/<tool-name>/`. Create only the structure it needs; packaging, a CLI, and focused tests are optional. Maintain paired tool READMEs for inputs, outputs, invocation, and dependencies. Pass project paths and parameters explicitly; tool code does not import project-root `src/`. Keep analysis products and runtime files in the project data/runtime layout. Notebook cells expose the research choices and launch the tool. Include existing tool source in the manual sync task, excluding environments, caches, and build/runtime artifacts; syncing source does not install a package.
+
+### Optional tool layout
+
+For example, a standalone window-summary tool could use this small layout. This is a style illustration; create it only when the project needs such a tool.
+
+```text
+tools/
+└── window_summary/
+    ├── README.md
+    ├── README.zh-CN.md
+    └── main.py
+```
+
+The paired tool READMEs describe its scientific purpose, input columns and coordinates, output columns, dependencies, and invocation. `main.py` provides the tool interface and implementation without importing project-root `src/`. Add a package layout, dependency file, or focused tests only as the tool needs them.
+
+For a CLI using the notebook kernel's environment, a notebook calculation cell might call the interface below. The tool and flags are illustrative and must be implemented/documented before use:
+
+```python
+import subprocess
+import sys
+
+input_file = f'{source_dir}/variants.csv'
+window_size = 500
+output_file = f'{results_dir}/variant_windows.b{window_size}.csv.gz'
+subprocess.run([
+    sys.executable, f'{project_dir}/tools/window_summary/main.py',
+    '--input', input_file, '--output', output_file,
+    '--window-size', str(window_size),
+], check=True)
+```
+
+The notebook owns the research choices; the tool owns calculation and output completion. A later plotting cell loads `output_file` and applies the shared plotting style. Keep outputs outside the tool directory. Add `${workspaceFolder}/tools` to the manual sync task only once the directory exists; transfer source and documentation while excluding environments and build/runtime artifacts. A different tool environment needs its own confirmed interpreter or launcher.
+
 ## Local and remote files
 
-- Local: `README.md`, `README.zh-CN.md`, `notebooks/`, `src/`, `config/`, and `.vscode/tasks.json`.
+- Local: `README.md`, `README.zh-CN.md`, `notebooks/`, `src/`, optional `tools/`, `config/`, and `.vscode/tasks.json`.
 - Private local guides: `JUPYTER_START.md` and `JUPYTER_START.zh-CN.md`; both are project-specific and ignored by Git.
-- Remote: synchronized `src/` and `config/`, plus large source inputs and analysis products under `data/` (or the project's established layout).
+- Remote: synchronized `src/`, existing `tools/`, and `config/`, plus large source inputs and analysis products under `data/` (or the project's established layout).
 - Notebooks remain local, while their Python code runs through the selected remote Jupyter kernel.
 - Figures, tables, and text displays return through Jupyter; files written to disk remain remote by default.
 
@@ -47,8 +85,8 @@ Remote machine, software, and scheduler rules come from the corresponding `remot
 
 ## Notebook workflow
 
-1. Edit notebooks, `src/`, or `config/` locally.
-2. After changing `src/` or remote-consumed configuration, run `Sync <project> to <machine>` in VS Code.
+1. Edit notebooks, `src/`, existing `tools/`, or `config/` locally.
+2. After changing `src/`, `tools/`, or remote-consumed configuration, run `Sync <project> to <machine>` in VS Code.
 3. Follow `JUPYTER_START.md` to start Jupyter on the allowed remote node and open the local SSH tunnel.
 4. In VS Code, connect to the Existing Jupyter Server URL and select the configured kernel.
 5. Manually run the cells identified in the Codex handoff and inspect their outputs.

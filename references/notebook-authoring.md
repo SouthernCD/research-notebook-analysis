@@ -1,10 +1,10 @@
 # Notebook Authoring
 
-Use this guide when creating or editing notebooks and their nearby `src/` files.
+Use this guide when creating or editing notebooks and their nearby `src/` files. For independent analysis tools in `tools/`, also read [project-tools.md](project-tools.md).
 
 For explicit whole-project style unification, also read [project-style-unification.md](project-style-unification.md): migrate one notebook and its source dependencies, then verify and obtain user acceptance before committing and advancing. Ordinary edits do not trigger that workflow.
 
-For notebook creation or substantial structural edits, first read [style_example.ipynb](../assets/project-template/notebooks/style_example.ipynb). It demonstrates concise paired English/Chinese narrative, scientific section hierarchy, short operation cues, remote initialization, step-local parameters and result reuse, separate plotting, and bilingual figure captions without invented findings. It has no executed outputs. Use relevant sections for small edits; preserve unrelated existing style and never execute or copy the example automatically. Apply the user's conventions to the changed portions, then perform the authoring self-review in `SKILL.md` before handoff.
+For notebook creation or substantial structural edits, first read [authoring-examples.md](authoring-examples.md) and inspect the matching sections of [style_example.ipynb](../assets/project-template/notebooks/style_example.ipynb). The index calibrates heading-only operations, compact methods, detailed metric definitions, independent calculation/plotting, and captions ranging from one sentence to complex multi-panel or statistical explanations. The notebook demonstrates these patterns with paired English/Chinese narrative and visible local parameters, without invented findings. It has no executed outputs. Use relevant sections for small edits; preserve unrelated existing style and never execute or copy the example automatically. Apply the user's conventions to the changed portions, then perform the authoring self-review in `SKILL.md` before handoff.
 
 ## Research Record
 
@@ -24,7 +24,7 @@ Prefer a small sequence of meaningful Markdown and code cells over a software-st
 
 - Organize major sections by scientific question, analysis object, or research stage; use operation-level subsections that readers can find independently.
 - Before code, briefly state the scientific question or operation. A heading may be sufficient for an obvious routine step; do not repeat a full purpose/input/method/output template for every cell.
-- Expand explanations where scientific meaning depends on coordinate systems, units, denominators, overlap handling, missing data, filtering, or parameter rationale. Cite supplied provenance near the relevant input; do not invent sources.
+- Expand explanations where scientific meaning depends on coordinate systems, units, denominators, overlap handling, missing data, filtering, or parameter rationale. Define a derived metric with its formula or an equally precise definition, specify its reference/background and interpretation, and describe consequential low-count, zero-denominator, or tie rules when applicable. Distinguish a per-variant mean from a per-base density, and a complete background from a foreground-excluded control pool when relevant. Put definitions at first scientific use; captions may refer back rather than repeating the methods. Cite supplied provenance near the relevant input; do not invent sources. These are criteria for what needs explanation, not a checklist to repeat for every cell.
 - Keep heading levels and numbering consistent with neighboring sections when inserting or splitting material.
 - After important plots, explain how to read the figure in its bilingual caption. Add a separate interpretation paragraph only when it contributes scientific reasoning beyond the caption; ordinary calculation cells do not require a repeated explanation.
 - Explain filtering and parameter choices only where needed to understand the biological analysis; do not narrate implementation settings.
@@ -33,6 +33,8 @@ Prefer a small sequence of meaningful Markdown and code cells over a software-st
 - When code changes make an old output misleading, clear only the affected output or tell the user to rerun that cell; do not imply the new output already exists.
 
 ### Section hierarchy and operation cues
+
+Start with a title and a brief statement of the notebook's scientific scope. Arrange numbered sections in the order a reader needs to understand and perform the analysis: establish inputs and definitions, perform the scientific comparisons, then present results. Adapt the stages to the actual research; do not require a fixed stage list. Keep setup before the scientific stages when useful, and do not make helper names, file loading, caching, or export mechanics the main outline.
 
 Use `#` for the notebook title, `## 1` for a major scientific section, `### 1.1` for its subsection, and `#### 1.1.1` when a further scientific subdivision helps navigation. Increase heading depth with numbering depth, keep English/Chinese pairs identical in level and number, and avoid parent/child titles that repeat the same topic. Unnumbered setup headings may stand before the numbered scientific sections.
 
@@ -66,6 +68,12 @@ Keep each pair semantically aligned:
 When the user edits Chinese Markdown and names it as the standard, treat that text as authoritative for scope, tone and detail. Revise the English to match additions and deletions, including headings and figure captions; do not preserve English-only explanations from an older draft. A natural translation need not mirror word order. If the requested wording conflicts with known scientific inputs or behavior, identify the conflict and make the smallest necessary correction without inventing findings.
 
 For an existing monolingual notebook, create the missing language partner next to each Markdown cell touched by the current request. Preserve untouched historical cells unless the user asks to convert the whole notebook.
+
+### Final publication copies
+
+During project work, keep adjacent English/Chinese narrative cells in the same notebook and only one copy of its analysis code. Do not split languages for ordinary cleanup, debugging, style unification, or manuscript drafting. When the user is preparing the final publication/release, offer separate English and Chinese notebook directories as an optional reading convenience, for example `notebooks/` and `notebooks.zh-CN/`. A suggestion does not authorize restructuring; make the copies only when the user chooses this final-publication option.
+
+For an authorized split, derive both versions from the same finalized bilingual notebook, retaining only the selected language's narrative while preserving identical code, code order, scientific parameters, relevant saved outputs, and corresponding section/figure numbers. Check that the retained language reads coherently, notebook paths/imports and project-root assumptions remain usable, and both README inventories explain which version to choose. Keep any retained working bilingual copy's role clear and avoid three competing editable versions. Do not rerun analyses, regenerate scientific outputs, or redesign the project merely to split narrative languages; validate notebook structure and code equivalence statically. If analysis resumes, use one bilingual working source rather than editing the publication copies independently.
 
 ## Remote Initialization Cell
 
@@ -119,9 +127,9 @@ Do not build or install a Python package merely to avoid this small notebook-loc
 
 ## Local Parameters and Focused Cells
 
-A useful cell shape is: relevant imports, explicit input/output paths, this step's parameters, computation or result loading, and a focused display or save operation. Adapt it to the established notebook rather than imposing a fixed skeleton or cell-length limit.
+For each scientific operation, keep its input/output paths, selected samples/features/contrasts, scientific parameters, and actual analysis call visible in the relevant notebook section. A useful cell shape is: relevant imports, explicit input/output paths, this step's parameters, computation or result loading, and a focused display or save operation. Adapt it to the established notebook rather than imposing a fixed skeleton or cell-length limit.
 
-Keep scientific choices visible: thresholds, window sizes, analysis populations, random seeds, and frequently adjusted plotting settings should normally be set near the call that uses them. `src/` implements the operation; the notebook shows the choices and their rationale. Avoid a distant global parameter block or hidden helper defaults for choices that materially affect interpretation.
+Keep scientific choices visible: thresholds, window sizes, analysis populations, random seeds, and frequently adjusted plotting settings should normally be set near the call that uses them. `src/` or `tools/` implements the operation; the notebook shows the choices and their rationale. Pass scientifically important values explicitly or visibly select/load their authoritative configuration; do not hide the research design inside an opaque runner. Avoid a distant global parameter block or hidden helper defaults for choices that materially affect interpretation.
 
 When calculation and plotting share parameters/output paths, define them once in a short setup cell immediately before that analysis section. Both cells use those definitions; plotting reads saved statistics after lightweight initialization/setup, without needing to run the calculation cell. Keep plotting-only choices in the plotting cell. Do not independently repeat scientific parameter values merely to make a plotting cell appear self-contained.
 
@@ -146,13 +154,13 @@ Use the shared [plot_style.py](../assets/project-template/src/plot_style.py) imp
 
 All figures start from this baseline, including those made by `src/` helpers. Per-figure `figsize`, layout, data colors, and scientifically necessary axis settings can vary; avoid blanket `plt.style.use`, Seaborn theme resets, or helper-level rcParams changes that silently replace the shared style. After editing the shared style, sync `src/` and rerun its initialization call before rerunning plotting cells; autoreload alone does not reapply rcParams. Arial availability is a kernel-environment fact, not a reason to install fonts or silently change the requested style.
 
-By default, put substantive statistical calculation and plotting in separate code cells. The calculation cell saves its intermediate table; the plotting cell loads that saved table and contains only plot-data selection/transformation, figure styling, and exports. This allows rerunning plots without expensive recalculation or relying on the calculation cell's in-memory state. A short load-and-plot cell is appropriate, but do not hide expensive cache-miss computation inside it. Consult the separate calculation and plotting cells in the notebook example before authoring this pattern.
+By default, put substantive statistical calculation and plotting in separate code cells. The calculation cell saves its intermediate table; the plotting cell loads that saved table and contains only plot-data selection/transformation, figure styling, and exports. This allows rerunning plots without expensive recalculation or relying on the calculation cell's in-memory state. A short load-and-plot cell is appropriate, but do not hide expensive cache-miss computation inside it. If saved statistics are absent, report the missing input and identify the calculation cell to run; do not fall back to computation. Plotting may select, reshape, scale, or aggregate the saved statistics for display, but model fitting, permutations, genotype processing, or new scientific estimation belongs in calculation cells. A small calculation-stage preview table is useful and does not require an artificial extra plotting cell. When reviewing the edit statically, trace plotting inputs back to disk and section setup to catch dependencies on objects created only by the expensive calculation cell. Consult the separate calculation and plotting cells in the notebook example before authoring this pattern.
 
 Prefer plotting helpers that accept existing tables and return figure/axes for further adjustment. Display important figures inline and save suitable export formats. Always save the actual figure data as `.csv.gz` using pandas for publication inspection, including the selected rows and transformed/aggregated values used by the plot. Export relevant series/panels with clear identifiers, either together or as separate compressed tables. A large HDF intermediate does not replace this export. Name outputs consistently with the analysis and relevant parameters; do not hard-code paper-specific figure numbers into the generic skill.
 
 Use diagnostic panels when they help evaluate a result, rather than copying a particular project's colors or panel layout universally.
 
-## Notebook Versus `src/`
+## Notebook, `src/`, and `tools/`
 
 Keep code in the notebook when it is short, specific to one analysis step, and improves the visible reasoning trail.
 
@@ -163,11 +171,13 @@ Use `src/` when code is:
 - easier to test or review as a function;
 - a shell pipeline or scheduler implementation whose details are easier to review separately, while its launch remains explicit in the notebook.
 
-Functions imported from `src/*.py` must not perform work at import time. After a local edit, the user must run the VS Code sync task before rerunning the import/call cell. `%autoreload 2` normally reloads changed modules; use explicit `importlib.reload()` only when autoreload is unsuitable for the package.
+Use `tools/<tool-name>/` for a coherent analysis tool with a defined independent interface and its own internal structure; follow [project-tools.md](project-tools.md). Keep project-specific adapters in root `src/` when needed. The tool may expose a CLI, while notebook cells still launch its use in this research workflow.
+
+Functions imported from `src/*.py` or tool packages must not perform work at import time. After a local edit, the user must run the VS Code sync task before rerunning the import/call cell. `%autoreload 2` normally reloads changed modules; use explicit `importlib.reload()` only when autoreload is unsuitable for the package.
 
 ### External tools and scheduler launch cells
 
-Use notebook cells as the default entry point for every analysis step, including external tools, file-changing operations, and long-running computation. `subprocess.run` is allowed in cells or source functions. Prefer a clear argument list with `check=True` and visible stdout/stderr or a named log; a simple shell magic is also acceptable when it communicates the operation clearly. Long/reused shell or scheduler implementations can live in `src/`, with the notebook explicitly calling them and setting their key parameters. Do not require users to edit/run scripts outside the notebook solely because an operation is external or expensive.
+Use notebook cells as the default entry point for every analysis step, including external tools, file-changing operations, and long-running computation. `subprocess.run` is allowed in cells or source functions. Prefer a clear argument list with `check=True` and visible stdout/stderr or a named log; a simple shell magic is also acceptable when it communicates the operation clearly. Long/reused shell or scheduler implementations can live in `src/` or the relevant `tools/<tool-name>/`, with the notebook explicitly calling them and setting their key parameters. Do not require users to edit/run scripts outside the notebook solely because an operation is external or expensive.
 
 Before a launch cell, briefly explain its scientific purpose and necessary method definitions in Markdown. Put execution context, inputs/output paths, resource settings, and invocation details in code. Show progress or log location through code, propagate failures, and only reuse complete relevant outputs at the layer owning that step. Keep automatic import side effects prohibited; launching happens when the reader deliberately runs the cell, not when a module is imported.
 
@@ -322,7 +332,7 @@ For a bilingual narrative task, place the marker in the English Markdown cell. T
    - zero: ask the user to place and save the appropriate marker;
    - more than one: list each marker's cell type and a short nearby source preview, then ask the user to leave only the intended marker;
    - one: use that cell as the primary edit target.
-3. Keep edits scoped to the marked cell and the smallest necessary nearby cells or `src/` files. A bilingual Markdown partner is required scope, not an unrelated expansion. Disclose every additional edit in the handoff.
+3. Keep edits scoped to the marked cell and the smallest necessary nearby cells, `src/` files, or tool files. A bilingual Markdown partner is required scope, not an unrelated expansion. Disclose every additional edit in the handoff.
 4. If the result requires splitting or inserting cells, put the done marker on the primary resulting cell and identify the other inserted cells by heading or purpose.
 5. Convert the marker only after the requested file edit is complete. If blocked, ambiguous, or partially implemented, preserve the todo marker.
 
@@ -375,7 +385,7 @@ Before execution:
 2. confirm the intended remote kernelspec and environment;
 3. confirm the configured remote project root;
 4. verify the execution node and resource policy through `remote-hpc-operator`;
-5. ensure required `src/` and `config/` changes were synchronized;
+5. ensure required `src/`, `tools/`, and `config/` changes were synchronized;
 6. identify whether execution will overwrite remote result files.
 
 After execution, report whether the notebook completed, the first failing cell if any, and where executed notebook outputs and remote result files were written. Never report scientific conclusions beyond what the actual outputs support.
@@ -393,4 +403,4 @@ Use a compact form such as:
 手动命令：无。
 ```
 
-If `src/` or remote-consumed `config/` also changed, replace the sync line with the exact VS Code task and tell the user to sync before rerunning the marked cell. Omit irrelevant lines only when the remaining handoff is still unambiguous. Explicitly state when no sync or run is needed.
+If `src/`, `tools/`, or remote-consumed `config/` also changed, replace the sync line with the exact VS Code task and tell the user to sync before rerunning the marked cell. Omit irrelevant lines only when the remaining handoff is still unambiguous. Explicitly state when no sync or run is needed.

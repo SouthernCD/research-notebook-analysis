@@ -9,12 +9,12 @@ description: Assist with local scientific Jupyter notebooks whose kernels, data,
 
 Act as a scientific notebook copilot. Prepare, edit, explain, and hand work back to the user; let the user run it and judge the scientific result.
 
-The notebook is the complete, readable entry point for reproducing the project's defined analysis scope. A reader should see every step, its inputs/outputs and key scientific/resource parameters, and launch it from cells. `src/` holds implementation, not an alternative workflow users must run from a terminal. External tools and scheduler jobs may be launched explicitly from notebook cells; only specifically justified or user-requested exceptions require an outside-notebook analysis action. This design goal does not authorize the agent to execute those cells.
+The notebook is the complete, readable entry point for reproducing the project's defined analysis scope. A reader should see every step, its inputs/outputs and key scientific/resource parameters, and launch it from cells. `src/` and optional `tools/<tool-name>/` hold implementation; the project workflow remains launchable from notebook cells. External tools and scheduler jobs may be launched explicitly from notebook cells; only specifically justified or user-requested exceptions require an outside-notebook analysis action. This design goal does not authorize the agent to execute those cells.
 
 By default:
 
 - Inspect the existing notebook, its saved outputs, and nearby project files.
-- Edit or add notebook Markdown/code cells and place necessary reusable files under `src/`.
+- Edit or add notebook Markdown/code cells and place project helpers under `src/` or a coherent independent analysis tool under `tools/<tool-name>/`.
 - Prepare configuration, source implementations, external-tool launch cells, and scheduler files without executing them as the agent.
 - Do not execute notebook cells, submit jobs, start large analyses, or infer permission to run from a request to write, fix, diagnose, or explain.
 - Prefer static checks and a precise manual run handoff over executing code for verification.
@@ -114,6 +114,8 @@ Read [references/remote-jupyter.md](references/remote-jupyter.md) completely bef
 
 ## Lightweight Project Shape
 
+Keep the directory tree shallow and organized by research role. Add a directory or configuration file only for a current concrete need; do not create one per cell, figure, or minor operation. Number notebooks by scientific stage and dependency order, name source modules by analysis domain, and describe their producer/consumer relationships in the paired READMEs. Do not copy a reference project's exact notebook count or topics.
+
 For a new project, start with this minimal research-oriented structure. The notebook name and source files reflect actual needs, not files to generate literally:
 
 ```text
@@ -127,6 +129,8 @@ project/
 │   └── 01_<first-step>.ipynb
 ├── src/
 │   └── plot_style.py        # when figures are needed; other source only as required
+├── tools/                  # optional; only for a concrete independent analysis tool
+│   └── <tool-name>/
 ├── config/
 │   └── project.yaml
 ├── data/
@@ -136,19 +140,19 @@ project/
     └── tasks.json
 ```
 
-The notebook is the primary research record, presentation surface, and analysis launcher. Keep short, one-off analysis code in the notebook. Move code to `src/` only when it is long, reused, easier to review separately, or represents a shell/batch operation; keep its explicit invocation and key parameters in a notebook cell. Python, shell, and scheduler files may coexist in `src/`; do not add a separate `scripts/` tree by default.
+The notebook is the primary research record, presentation surface, and analysis launcher. Keep short, one-off analysis code in the notebook. Move project-specific code to `src/` when it is long, reused, easier to review separately, or represents a shell/batch operation; keep its explicit invocation and key parameters in a notebook cell. Python, shell, and scheduler files may coexist in `src/`; do not add a separate project-root `scripts/` tree by default. A complete analysis tool with defined inputs/outputs and an independent interface belongs in optional `tools/<tool-name>/`, rather than being forced into project-root `src/`. Read [references/project-tools.md](references/project-tools.md) before creating, restructuring, or integrating such a tool. Its internal package, CLI, tests, and dependency files are allowed when useful; do not generate them automatically. Keep scientific choices and explicit launches in the notebook.
 
 Preserve an existing project's data layout. For a new project, `data/source/` and `data/results/` are a useful convention: source inputs may already be analysis-ready; results include intermediates, models, figure data, and final outputs. These are logical remote locations, not directories to populate locally by default.
 
 Keep frequently adjusted scientific parameters visible at their point of use in the notebook. Shared context definitions or comparison catalogs may live in configuration when reused across analyses; identify their authoritative source and avoid conflicting notebook/config copies. Keep machine-specific configuration private and provide sanitized examples when the project is intended for sharing.
 
-Avoid adding `tests/`, `docs/`, `lib/`, `bin/`, `workflow/`, `pipelines/`, packaging metadata, CI, containers, or placeholder modules unless the research task actually requires them. Do not create empty directories with `.gitkeep`.
+At project root, avoid adding `tests/`, `docs/`, `lib/`, `bin/`, `workflow/`, `pipelines/`, packaging metadata, CI, containers, or placeholder modules unless the research task actually requires them. Do not create empty directories with `.gitkeep`.
 
 ## Notebook Authoring
 
 The conventions below are the user's default authoring requirements, not optional inspiration. Apply them to new work and the portions touched by an edit, unless the user explicitly requests a different approach. Preserve unrelated existing code and structure. Examples illustrate these requirements; project-specific inputs, parameters, and findings must come from the actual project.
 
-Treat each notebook as a readable, operable lab record. Organize sections by scientific question, analysis object, or research stage, with focused operations beneath them. Keep ordinary explanations short; expand scientific rationale, coordinate conventions, denominators, filtering, or uncertainty where they affect interpretation. Do not impose a repeated purpose/input/method/output template on every cell.
+Treat each notebook as a readable, operable lab record. Open with its scientific scope and organize sections by scientific question, analysis object, or research stage, with focused operations beneath them. Keep the visible order aligned with the analysis dependencies; avoid a structure driven by helper names, file formats, or software plumbing. Keep ordinary explanations short; expand scientific rationale, coordinate conventions, denominators, filtering, or uncertainty where they affect interpretation. Concision must not omit definitions needed to understand a result: define derived metrics, comparison/reference populations, window/anchor conventions, and consequential missing-data or tie handling where relevant. Put each definition near its first scientific use and explain complex figures in their captions without repeating the full methods. Do not impose a repeated purpose/input/method/output template on every cell.
 
 Use this default presentation pattern: paired scientific headings, a brief explanation or operation cue, focused calculation/plotting cells, and paired figure captions after the displayed figure. Ordinary narrative usually needs only one or two sentences. Number scientific sections with matching Markdown depth (`## 1`, `### 1.1`, `#### 1.1.1`); describe smaller operations with a short bullet or standalone phrase rather than another numbered heading. Avoid repeating the parent section's title in its child. Put essential reading guidance in the caption when that avoids a separate repetitive interpretation section.
 
@@ -164,6 +168,8 @@ Notebook Markdown is for biology readers and reviewers. Keep only the research p
 
 Make the research purpose, analysis stages, and important output interpretation easy to locate. Put initialization, invocation, resource settings, progress, and resumption logic in code cells; interface docstrings can explain implementation contracts. Preserve established section numbering and expose meaningful scientific stages without technical detail piling up in Markdown.
 
+Keep inputs, output paths, analysis selections, scientific parameters, and actual calls visible in the relevant notebook section. Define shared calculation/plotting settings once in a nearby setup cell; do not hide important scientific choices behind helper defaults or a distant global block. After initialization and section setup, plotting must load saved statistics without requiring the expensive calculation cell or its in-memory objects.
+
 For reusable computations, define expected outputs and reuse complete, compatible results before recomputing. Keep output and cache checks at the layer responsible for the result rather than repeating them throughout the call chain. File existence alone does not establish compatibility with current inputs or parameters. Separate expensive calculation from plotting so display changes can reuse statistical results. Cache handling never authorizes Codex to execute cells or large workloads.
 
 Preserve the user's existing narrative, numbering, and useful saved outputs. Do not invent hypotheses, inputs, results, or interpretations.
@@ -177,11 +183,13 @@ Write all newly created or modified narrative material bilingually:
 - At project root, maintain `README.md` in English and `README.zh-CN.md` in Chinese with the same structure and facts; link the two files to each other.
 - If another standalone prose document is genuinely needed, use `<name>.md` for English and `<name>.zh-CN.md` for Chinese, keep them semantically aligned, and cross-link them. Do not create extra documentation files or a `docs/` tree without a research need.
 
+During analysis, debugging, and revision, retain one working notebook per stage with adjacent English/Chinese Markdown pairs and a single shared set of code cells. Only at final publication preparation, suggest optional language-specific copies such as `notebooks/` and `notebooks.zh-CN/`; do not create or maintain separate language trees during ongoing work. Carry out a split only when the user chooses it as part of final publication preparation. Follow the publication-copy checks in [references/notebook-authoring.md](references/notebook-authoring.md).
+
 Assume notebook Python runs in the remote kernel. Begin new initialization cells with `import warnings` and `warnings.filterwarnings('ignore')`, then imports and setup. Make the remote project root explicit near the top, verify hostname and working directory, and enable `%autoreload 2` for synchronized modules. Do not hide local/remote path assumptions inside helpers.
 
 For detailed notebook patterns, source-file decisions, and whole-notebook execution rules, read [references/notebook-authoring.md](references/notebook-authoring.md).
 
-Before creating a notebook or substantially revising its narrative/cell organization, inspect [assets/project-template/notebooks/style_example.ipynb](assets/project-template/notebooks/style_example.ipynb) as a writing reference. For a small targeted edit, consult the relevant example section as needed. Follow its concise paired narrative, restrained heading hierarchy, bilingual figure captions, explicit local parameters, result reuse, and separate plotting while preserving the user's established structure. Adapt the pattern, not its scientific thresholds, inputs, or headings. This unexecuted agent reference and its companion source module are not files to copy into every project.
+Before creating a notebook or substantially revising its narrative/cell organization, read [references/authoring-examples.md](references/authoring-examples.md), then inspect the matching sections of [assets/project-template/notebooks/style_example.ipynb](assets/project-template/notebooks/style_example.ipynb) as writing references. The index maps simple operation cues, compact methods, detailed metric definitions, table previews, calculation/plotting cells, external launches, and minimal through complex or statistical captions. For a small targeted edit, consult only the relevant example; choose its level of detail rather than adding every pattern to the notebook. Follow its concise paired narrative, restrained heading hierarchy, bilingual figure captions, explicit local parameters, result reuse, and separate plotting while preserving the user's established structure. Adapt the pattern, not its scientific thresholds, inputs, or headings. This unexecuted agent reference and its companion source module are not files to copy into every project.
 
 ## Python Source Style
 
@@ -205,12 +213,13 @@ Before creating or substantially changing `src/*.py`, read the relevant function
 
 Before handing off notebook/source edits, review the changed portions against the following requirements and repair applicable deviations. Use static inspection by default; this is not permission to execute notebook cells, install dependencies, or launch scientific workloads. Keep this review internal rather than adding a checklist to every notebook or user-facing response.
 
-- Narrative: concise biology-reader/reviewer-facing sections explaining what, why, and interpretation; Chinese-led alignment when requested; aligned English/Chinese headings and consecutive bilingual figure captions; no program control logic, repeated runtime settings, argument inventories, task lists, or editing records. Scientific parameters appear only when needed for interpretation; no invented inputs or findings.
+- Organization: shallow directories justified by current needs, numbered notebooks following scientific stages/dependencies, domain-based source modules, and no automatic language split during development.
+- Narrative: concise biology-reader/reviewer-facing sections explaining what, why, and interpretation, with sufficient local definitions for metrics, references, coordinates, and consequential edge cases; Chinese-led alignment when requested; aligned English/Chinese headings and consecutive bilingual figure captions; no program control logic, repeated runtime settings, argument inventories, task lists, or editing records. Scientific parameters appear only when needed for interpretation; no invented inputs or findings.
 - Initialization and paths: warning suppression, explicit remote root, `os`/f-string paths, autoreload, and an explicit shared-style call before plotting, where initialization is in scope.
 - Tables and resumption: cell-level saved results for substantial steps, progress-only loops by default, `.csv.gz` for small tables, one `.h5` per large table with key `'df'`, and one responsible layer for reuse checks. Input/parameter changes identify affected outputs without building a general cache framework.
-- Workflow and plotting: every included analysis step is visible and launchable in notebook cells with key parameters; external/job steps expose status/completion before continuation. Keep separate calculation and plotting cells, disk-backed statistics, no expensive cache-miss analysis in plotting, shared style retained, and actual plotted values exported to `.csv.gz`. Shared analysis parameters/output paths have one definition rather than independent copies in calculation and plotting cells.
+- Workflow and plotting: every included analysis step is visible and launchable in notebook cells with key parameters; external/job steps expose status/completion before continuation. Keep separate calculation and plotting cells, disk-backed statistics, no expensive cache-miss analysis in plotting, shared style retained, and actual plotted values exported to `.csv.gz`. Shared analysis parameters/output paths have one visible nearby definition rather than independent copies in calculation and plotting cells. Plotting works from initialization, section setup, and saved statistics without rerunning expensive calculations.
 - Source and progress: direct readable data flow, only meaningful abstractions and scientific checks, compact formatting, appropriate interface docstrings, and timestamps/elapsed time or tqdm for multi-step work.
-- Scope and handoff: no automatic copying of reference examples, unrelated refactoring, implicit execution, or forgotten sync instructions. Identify saved outputs and the smallest cells to rerun.
+- Scope and handoff: no automatic copying of reference examples, unrelated refactoring, implicit execution, or forgotten sync instructions. Tools retain independent interfaces without imports from project-root `src/`; code sync is distinct from package installation. Identify saved outputs and the smallest cells to rerun.
 
 ## AI Task Markers
 
@@ -233,12 +242,12 @@ For a bilingual narrative edit, place the todo marker in the English Markdown ce
 Project synchronization uses only `.vscode/tasks.json`. Do not create a sync script, Python sync CLI, file watcher, or save hook.
 
 - Use `${workspaceFolder}` rather than a hard-coded local path.
-- Synchronize `README.md`, `README.zh-CN.md`, `src/`, and `config/` to the configured remote project root.
-- Exclude notebooks, `.git`, `.vscode`, caches, data, results, and common large scientific files.
+- Synchronize `README.md`, `README.zh-CN.md`, `src/`, `config/`, and existing `tools/` source to the configured remote project root. Select only existing directories; omit absent optional operands.
+- Exclude notebooks, `.git`, `.vscode`, environments, caches, build/install artifacts, data, results, logs, runtime state, and common large scientific files, including nested tool artifacts. See [references/project-tools.md](references/project-tools.md) for tool exclusions and package-loading checks.
 - Never add `rsync --delete` by default.
 - The user triggers the named task through VS Code **Run Build Task** or **Run Task** and reviews its terminal output.
 
-After changing `src/` or remote-consumed `config/`, explicitly tell the user to run the exact VS Code sync task before rerunning the relevant cell or job. A notebook-only edit does not require notebook synchronization because its cell code is sent directly to the remote kernel.
+After changing `src/`, `tools/`, or remote-consumed `config/`, explicitly tell the user to run the exact VS Code sync task before rerunning the relevant cell or job. A notebook-only edit does not require notebook synchronization because its cell code is sent directly to the remote kernel.
 
 ## Copilot Handoff
 

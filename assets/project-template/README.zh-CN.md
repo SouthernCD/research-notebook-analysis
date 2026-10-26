@@ -16,7 +16,9 @@
 
 1. `notebooks/01_<step>.ipynb` — 当前研究步骤和预期产出。
 
-只列出当前研究计划已经明确需要的 notebook。
+只列出当前研究计划已经明确需要的 notebook。按科学阶段和依赖顺序编号；目录保持浅层，只为当前需要增加文件。
+
+分析和调试期间，每本工作笔记使用相邻的英文、中文叙述 cells，并共用一套代码 cells。仅在最终发表整理时，才可考虑拆分语言目录；这是可选的发表副本，应从同一份定稿双语笔记生成，保持代码一致、章节及图号对应。
 
 ## 数据与复现边界
 
@@ -27,11 +29,47 @@
 
 科学参数通常在 notebook 中实际使用的位置说明和设置。跨分析共用的定义可以放在 `config/` 中，并明确其权威来源。
 
+## 分析实现
+
+简短分析代码留在 notebook，项目专用辅助函数和绘图代码放在项目根目录的 `src/`。当完整分析工具需要独立接口和内部结构时，放入 `tools/<tool-name>/`。只创建实际需要的结构；打包、CLI 和针对性测试均按需采用。工具维护成对的中英文 README，说明输入、输出、调用方法和依赖。显式传入项目路径和参数，工具代码不导入项目根目录的 `src/`。分析产物和运行文件保存在项目的数据及运行目录。Notebook cells 展示研究选择并启动工具。将已有工具源码加入手动同步任务，排除环境、缓存及构建和运行产物；源码同步并不等于安装软件包。
+
+### 可选工具结构
+
+例如，一个独立的窗口汇总工具可以采用下面的小型结构。这只是样式说明；仅在项目确实需要时创建。
+
+```text
+tools/
+└── window_summary/
+    ├── README.md
+    ├── README.zh-CN.md
+    └── main.py
+```
+
+工具的中英文 README 说明科学用途、输入字段和坐标约定、输出字段、依赖及调用方法。`main.py` 提供工具接口与实现，不导入项目根目录的 `src/`。仅在工具需要时增加包结构、依赖文件或针对性测试。
+
+对于使用 notebook kernel 环境的 CLI，笔记中的计算 cell 可以参考以下调用形式。工具及参数名仅作示意，使用前须有实际实现和接口说明：
+
+```python
+import subprocess
+import sys
+
+input_file = f'{source_dir}/variants.csv'
+window_size = 500
+output_file = f'{results_dir}/variant_windows.b{window_size}.csv.gz'
+subprocess.run([
+    sys.executable, f'{project_dir}/tools/window_summary/main.py',
+    '--input', input_file, '--output', output_file,
+    '--window-size', str(window_size),
+], check=True)
+```
+
+Notebook 确定研究选择；工具负责计算及完整输出。后续绘图 cell 读取 `output_file`，应用共享绘图样式。产物保存在工具目录外。仅在目录实际存在后，才将 `${workspaceFolder}/tools` 加入手动同步任务；同步源码和文档，排除环境及构建、运行产物。若工具使用另一环境，应采用该环境已确认的解释器或启动入口。
+
 ## 本地与远端文件
 
-- 本地：`README.md`、`README.zh-CN.md`、`notebooks/`、`src/`、`config/` 和 `.vscode/tasks.json`。
+- 本地：`README.md`、`README.zh-CN.md`、`notebooks/`、`src/`、可选的 `tools/`、`config/` 和 `.vscode/tasks.json`。
 - 私有本地指南：`JUPYTER_START.md` 和 `JUPYTER_START.zh-CN.md`；二者均为项目专用文件，并由 Git 忽略。
-- 远端：同步后的 `src/` 和 `config/`，以及 `data/`（或项目已有布局）中的大型输入与分析产物。
+- 远端：同步后的 `src/`、已有的 `tools/` 和 `config/`，以及 `data/`（或项目已有布局）中的大型输入与分析产物。
 - Notebook 保存在本地，其中的 Python 代码通过所选远端 Jupyter kernel 运行。
 - 图、表和文字显示通过 Jupyter 返回；写入磁盘的文件默认仍保存在远端。
 
@@ -47,8 +85,8 @@
 
 ## 笔记工作流
 
-1. 在本地编辑 notebook、`src/` 或 `config/`。
-2. 修改 `src/` 或远端需要读取的配置后，在 VS Code 中运行 `Sync <project> to <machine>`。
+1. 在本地编辑 notebook、`src/`、已有的 `tools/` 或 `config/`。
+2. 修改 `src/`、`tools/` 或远端需要读取的配置后，在 VS Code 中运行 `Sync <project> to <machine>`。
 3. 按照 `JUPYTER_START.zh-CN.md` 在允许的远端节点启动 Jupyter，并打开本地 SSH tunnel。
 4. 在 VS Code 中连接 Existing Jupyter Server URL，并选择已配置的 kernel。
 5. 手动运行 Codex 交接中指定的单元格，并检查其输出。

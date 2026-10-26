@@ -58,7 +58,7 @@ If imports or configuration appear stale:
 2. inspect rsync output for authentication, missing destination, permissions, and transferred filenames;
 3. verify the remote project root exists and contains the expected updated file;
 4. confirm notebook cwd equals the remote project root;
-5. confirm `src/` is on `sys.path` when needed;
+5. confirm the correct import path: project root for `from src...`, source directory for direct module imports, or the documented tool package/source location;
 6. rerun the import/call cell with `%autoreload 2` enabled;
 7. use `importlib.reload()` or restart the kernel only when module state requires it.
 
@@ -67,13 +67,15 @@ Do not solve a sync failure by broadening the task to data/results or adding `--
 Common import causes:
 
 - wrong remote cwd;
-- `src/` not on `sys.path`;
+- missing project/source/tool package path or a stale installed tool copy;
 - sync task not run or failed;
 - wrong kernelspec/environment;
 - dependency absent from the documented environment;
 - package state incompatible with autoreload.
 
 If results seem stale despite successful synchronization, inspect the expected output paths and the cache-reuse branch. Verify required files/columns and available input/parameter metadata. Distinguish stale results from stale source code; identify which outputs need explicit recomputation and downstream reruns, without deleting them or launching computation as a diagnostic shortcut.
+
+For `tools/`, distinguish synchronized source from the package/executable actually loaded; a non-editable installation may still use an older copy. Do not reinstall automatically.
 
 Any dependency installation or environment repair must follow `remote-hpc-operator` software policy.
 

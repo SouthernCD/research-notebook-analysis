@@ -15,7 +15,7 @@ Begin with a short explanation, adapted rather than pasted verbatim:
 
 Distinguish editing from running, and displayed figures from files saved remotely.
 Explain that the notebook displays and launches the complete defined analysis,
-including external-tool steps implemented in `src/`; separate terminal analysis
+including external-tool steps implemented in `src/` or `tools/`; separate terminal analysis
 scripts are not the default reproduction path.
 Do not start with a list of every configuration field, a large directory tree, or
 all the skill's restrictions. Explain terms such as kernel, synchronization, and
@@ -73,7 +73,7 @@ match the convention or confuse Git archiving with data backup.
 If only raw data are available, clarify what preparation belongs to the project's
 defined reproduction scope. Included preprocessing should have explicit notebook
 launch cells, even when implemented with external tools or scheduler files in
-`src/`. Explain required resources and completion checks. Onboarding itself does
+`src/` or `tools/`. Explain required resources and completion checks. Onboarding itself does
 not authorize the agent to execute a pipeline or install its dependencies.
 
 ## Agree on one concrete first step
@@ -109,7 +109,7 @@ choose Existing Jupyter Server, then verify the initialization cell. Do not
 proactively start the service or run analysis merely to demonstrate the workflow.
 
 At source-edit handoff, name the exact VS Code sync task and say why it is needed:
-local `src/` changes must reach the remote kernel. Notebook-only edits need no
+local `src/` or `tools/` changes must reach the remote kernel. Notebook-only edits need no
 notebook synchronization. Keep detailed startup/shutdown commands in the project
 guide rather than restating all infrastructure steps every turn.
 

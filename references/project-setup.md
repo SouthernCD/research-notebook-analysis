@@ -16,7 +16,7 @@ For a new project, aim for the smallest usable research starting point, not a co
 2. Read the remote machine index/profile and confirm project-specific machine, absolute remote root, server/kernel environments, node/resources, and ports. Record stable choices in `config/project.yaml` and validate them through the configuration-readiness procedure below. A missing remote directory, environment, or package requires the corresponding explicit authorization; initialization is not installation or remote execution.
 3. Create paired `README.md` and `README.zh-CN.md`, `.gitignore`, project configuration, and manual `.vscode/tasks.json`. Describe the research objective, actual notebook inventory, source/result roles, environment, reproducibility boundary, and manual workflow. Label genuinely known later stages as planned, without generating their files by default.
 4. Prepare the first useful numbered notebook, such as input audit, data preparation, or the first justified analysis. Read the notebook/source style references. Follow the first-notebook requirements below; create additional notebooks only when already needed by the current request.
-5. Add only required long/reusable source functions. Adopt `src/plot_style.py` when plotting is needed. Do not create placeholder modules, copy the agent-reference examples, or add a test/package/workflow framework by default.
+5. Add only required long/reusable source functions. If a complete independent analysis tool is needed, use `tools/<tool-name>/` following [project-tools.md](project-tools.md); do not create an empty tools scaffold. Adopt `src/plot_style.py` when plotting is needed. Do not create placeholder modules, copy the agent-reference examples, or add a test/package/workflow framework by default.
 6. Use logical `data/source/` and `data/results/` locations, normally remote; create local directories only when a small local file needs them, without `.gitkeep`. Do not download large data or populate the whole data tree merely to demonstrate the structure.
 7. After remote configuration passes readiness, generate project-specific `JUPYTER_START.md` and `JUPYTER_START.zh-CN.md` and ignore both guides plus `/runs/jupyter/`. The user starts the service manually unless explicitly requesting otherwise.
 8. Perform static checks, establish the initial local Git snapshot as described below, and hand off the exact sync task, startup guides, first cells to run, expected checks, and outstanding manual operations. Do not run the notebook just to validate initialization.
@@ -27,7 +27,7 @@ The reusable starting files are under `assets/project-template/`, and the privat
 
 `assets/project-template/src/style_examples.py` is an agent-only style reference. Read it when writing Python source, but do not copy the example module or create `src/` merely because it exists in the template. Create only source files required by the actual analysis.
 
-Likewise, `assets/project-template/notebooks/style_example.ipynb` is an unexecuted writing reference, not a research stage to add to the project's notebook inventory. Inspect its cell organization when authoring notebooks; do not copy the template directory wholesale or leave its example paths and inputs in a working project.
+Likewise, `assets/project-template/notebooks/style_example.ipynb` is an unexecuted writing reference, not a research stage to add to the project's notebook inventory. Use [authoring-examples.md](authoring-examples.md) to select its relevant cell and caption patterns when authoring notebooks; do not copy the template directory wholesale or leave its example paths and inputs in a working project.
 
 For projects that create figures, `assets/project-template/src/plot_style.py` is a reusable implementation to adopt or merge into the existing shared plotting module. It is not an agent-only example. Initialize this style explicitly in each notebook so project figures inherit the same defaults.
 
@@ -43,7 +43,7 @@ Use the scientific purpose to select the first step; a generic empty notebook is
 - Useful interface docstrings for required `src/` functions, without speculative abstractions or defensive checks.
 - Explicit launch/continuation cells and what the user should inspect, without fabricated findings.
 
-If heavy external tools are needed, prepare explicit notebook launch cells that show key parameters/resources and invoke the implementation in `src/` when appropriate. Include logs/status and completion/continuation handling so readers can reproduce the analysis from the notebook. Expensive work and scheduler submission must be visible, not hidden behind imports or unexplained convenience calls. Do not require outside-notebook script execution unless the user chooses it or a concrete limitation requires it.
+If heavy external tools are needed, prepare explicit notebook launch cells that show key parameters/resources and invoke the implementation in `src/` or `tools/<tool-name>/` when appropriate. Include logs/status and completion/continuation handling so readers can reproduce the analysis from the notebook. Expensive work and scheduler submission must be visible, not hidden behind imports or unexplained convenience calls. Do not require outside-notebook script execution unless the user chooses it or a concrete limitation requires it.
 
 ## Initial Git Snapshot and Completion
 
@@ -61,6 +61,8 @@ Call initialization complete only when the research starting point and project o
 
 ## Research Organization and Reproducibility Boundary
 
+Use a shallow directory tree organized by research role, with numbered notebooks following scientific stages and their dependencies and source modules named for analysis domains. Keep one bilingual working notebook per stage; add another notebook for a meaningful research boundary rather than every operation or figure. Create directories/configuration only for current needs. The example project's five stages are not a universal scaffold. Optional independent tools follow [project-tools.md](project-tools.md).
+
 In paired READMEs, describe the actual notebook order, each notebook's purpose and major output, and important producer/consumer dependencies. Keep the inventory aligned with files that exist; label planned stages as planned instead of presenting them as completed notebooks.
 
 Define data roles rather than forcing a directory migration:
@@ -73,6 +75,8 @@ State where reproduction begins, which upstream processing is outside project sc
 Keep scientific parameters near their notebook use. Shared scientific catalogs may be stored in configuration when several analyses consume them; distinguish executable definitions from descriptive metadata and avoid conflicting duplicate values.
 
 For shareable repositories, provide sanitized `config/project.example.yaml` and `.vscode/tasks.example.json` alongside private real settings when needed. Generate examples from the templates and confirmed structure without publishing machine-specific routes or paths. Preserve existing ignore rules and ignore the real `config/project.yaml` and `.vscode/tasks.json` when they contain private machine settings. Inspect tracking state first; adding ignore rules does not remove tracked files.
+
+Separate language notebook directories are an optional final-publication arrangement only. Keep English/Chinese cells together throughout development and debugging. At final publication preparation, offer the option and follow [notebook-authoring.md](notebook-authoring.md#final-publication-copies) if the user chooses it; ordinary setup or cleanup must not create parallel language trees.
 
 ## Project Configuration
 
@@ -157,7 +161,7 @@ When adopting an old project, inspect any existing Jupyter instructions before r
 
 ## VS Code Sync Task
 
-The template task uses `"type": "process"` to pass an `rsync` argument array directly, avoiding shell quoting for ordinary paths. Use a shell task only when the verified SSH setup genuinely requires shell behavior. Keep source selection explicit: `README.md`, `README.zh-CN.md`, `src/`, and `config/`. This avoids scanning or transferring the whole workspace and naturally leaves local notebooks behind.
+The template task uses `"type": "process"` to pass an `rsync` argument array directly, avoiding shell quoting for ordinary paths. Use a shell task only when the verified SSH setup genuinely requires shell behavior. Keep source selection explicit: `README.md`, `README.zh-CN.md`, and the existing `src/`, `config/`, and `tools/` directories. The template has no `tools/` operand until an actual tool exists; add it when creating the first tool, and omit any absent source directories. Include tool documentation/dependency files, exclude nested environments, caches, build/install artifacts, logs and runtime state, and follow [project-tools.md](project-tools.md) for details. This avoids scanning or transferring the whole workspace and naturally leaves local notebooks behind.
 
 When either README changes, update its language partner in the same task. Preserve matching heading order, facts, paths, environment names, resource values, notebook order, and caveats. Natural phrasing may differ between languages; semantic content must not.
 
@@ -171,7 +175,7 @@ Adapt these placeholders:
 
 The task must remain manual. Do not add background watching, automatic execution on save, or `--delete`. The remote project root should already exist unless the user explicitly asks Codex to create it through `remote-hpc-operator`.
 
-After editing `src/` or remote-consumed configuration, the handoff should say, for example:
+After editing `src/`, `tools/`, or remote-consumed configuration, the handoff should say, for example:
 
 > 请先在 VS Code 运行任务 `Sync <project> to <machine>`，确认 rsync 成功后，再重新运行 notebook 中“导入分析函数”和后续调用单元格。
 
