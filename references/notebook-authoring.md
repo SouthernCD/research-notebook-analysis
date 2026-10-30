@@ -139,14 +139,55 @@ Shared context definitions, named contrasts, or other catalogs used by several a
 
 The core notebook philosophy is to resume the notebook at approximately cell granularity: substantial calculation cells save reusable results, so after restarting the computer or kernel, completed steps can be loaded and skipped. Cell-internal loops normally display progress without saving each iteration. If interrupted mid-cell, rerunning that cell from its beginning is acceptable. Use finer-grained checkpoints only when the workload actually justifies them or the user asks; avoid a checkpoint framework and do not force trivial setup/display cells to produce files.
 
-For a reusable calculation, identify its expected output before the calculation and load it when complete and compatible. Otherwise prepare the calculation and save step for the user to run. Keep this logic per analysis step; do not introduce a global run mode or checkpoint framework by default.
+For a reusable calculation, establish its scientific signature and expected outputs in nearby section setup, then load complete matching results or prepare the calculation/save branch for the user to run. A local explicit recompute choice is appropriate when useful; do not introduce a global run mode or checkpoint framework. Plotting loads statistics without entering a calculation branch.
 
-- Put file and cache checks at the notebook or entry point that owns the result. Do not repeat the same checks in every helper. A helper that independently owns an output may manage that output's reuse.
-- For multiple required outputs, check the complete set. For incremental annotation tables, check required columns or keys and add missing components without rebuilding unrelated annotations.
-- When reusing results, display the path and relevant available metadata, such as dimensions, required columns, population, resolution, or recorded parameters. Check input/parameter compatibility using existing metadata when available. If compatibility cannot be established, state that limitation instead of declaring the cache valid.
-- Keep compatibility handling proportional: meaningful filenames, existing metadata, and explicit reuse assumptions are normally sufficient for project-specific examples. Do not introduce hashing registries, schema validators, versioned cache managers, or pervasive input checks merely to enforce these conventions.
-- A parameter change may require a different output name or explicit recomputation. Identify the affected outputs and downstream steps; do not silently overwrite unrelated or incompatible results. Moving or deleting outputs remains a user action unless explicitly requested.
-- A cached result does not make a call harmless: inspect the cache-miss branch and keep its operations explicit in code. External tools and pipelines belong in explicit launch cells with visible key parameters, outputs and resource requirements; a `JOB` or `.run()` wrapper must not conceal those stages. The user running that cell may launch the analysis; the agent still needs execution authorization.
+Put reuse and completion checks at the notebook or entry point that owns the result. Do not repeat them in downstream helpers. For incremental annotation tables, add genuinely missing components without rebuilding unrelated annotations. A cache-miss branch remains an analysis launch and requires the same execution authorization as any other computation.
+
+### Scientific signatures and minimal validation
+
+Apply this convention to new or modified substantial reusable calculation outputs. Do not require trivial cells to save files or migrate unrelated historical results.
+
+**Explicit scientific dependencies.** Define a small signature specification near the analysis call: analysis identifier, local `method_version`, input identities, and scientifically consequential parameters. Include sample/feature/contrast selections, reference or coordinate versions, thresholds, and random seeds when relevant. Include a software version only when it determines the scientific method. Exclude paths, mtimes/ctimes, run timestamps, output locations, progress settings, plotting cosmetics, and thread counts unless a setting actually changes the scientific calculation. Do not infer dependencies by scanning functions, environments, or the repository. Do not hash all arguments or use the repository-wide Git commit as the method version. Explicitly bump the local method version when calculation semantics change; formatting or prose edits do not require a bump.
+
+**Stable serialization.** Use JSON-compatible native values and SHA-256 over UTF-8 JSON serialized with `sort_keys=True`, `separators=(',', ':')`, `ensure_ascii=False`, and `allow_nan=False`. Normalize units and types explicitly (for example integer bp); preserve parameter precision. Sort only scientifically unordered selections. Retain order when it determines sample alignment or analysis meaning. Do not use Python's process-dependent `hash()`, `default=str`, rounded parameter values, or file timestamps to establish identity. Use the first 16 hexadecimal characters (8 bytes / 64 bits) in a descriptive result filename; retain the full digest to detect a shortened-name collision.
+
+**Input identity at its source.** Prefer an existing content checksum or a trustworthy immutable dataset release that identifies the actual selected input. A path or mutable label such as `latest` is insufficient. If a raw input can change in place and lacks a reliable immutable identity, establish a content checksum at ingestion; stream large files and record the checksum for that immutable snapshot. Do not reuse a checksum blindly for a mutable file, or use size/mtime as proof of unchanged content. Resolve an uncertain mutable source at this boundary instead of repeatedly hashing large inputs in every downstream cell. Input checksum establishment is data I/O, not permission for the agent to read remote data or execute notebook cells.
+
+For generated inputs, carry forward the upstream scientific signature from lightweight setup/metadata; do not hash regenerated CSV/gzip/HDF bytes or compare modification times. Equal scientific inputs, parameters and method versions yield the same identity across reruns. This is computational provenance, not a promise of byte-identical output: fix relevant random seeds and document material nondeterminism. A manually edited artifact needs a new content/input identity. If source identity changes, dependent signatures change even when some resulting values happen to match; do not add content-equivalence machinery by default.
+
+**Minimal result records and completion.** Store the full digest and signature specification in HDF attributes or one small JSON record per output group. Record output names for multi-file results. Write data to temporary sibling paths and publish with `os.replace()` only after writing completes. Publish the group's metadata/completion record last, also via a temporary path and atomic replacement. Before explicitly replacing an existing group under the same signature, invalidate its old completion record so an interrupted rerun cannot leave a mixture accepted as complete. Do not support concurrent writers unless the actual task requires it.
+
+At the owning boundary, derive the expected signature, require its completed output set, and compare the saved full digest/specification. Stop on a known mismatch (including a shortened-name collision) with a specific explanation; do not silently accept it or delete unrelated results. Missing outputs/record mean the signed result is incomplete and identify the calculation cell to run. A matching complete result needs no recursive upstream audit, timestamp comparison, repeated checksum computation, or generic schema validator. Retain targeted sample/coordinate/unit checks where those assumptions are first established; ordinary read errors remain library errors.
+
+**Legacy uncertainty.** Existing unsigned results or missing historical metadata are not automatically incompatible. State the specific unknown in code output or the handoff. If it cannot affect scientific correctness, allow explicit documented reuse without inventing a signature or forcing recomputation. If uncertainty could silently change the analysis (for example unknown genome build), resolve that fact or obtain the user's explicit informed reuse choice. A known scientific contradiction requires correction; an override must not relabel it as compatible. Do not rename, delete, migrate, or recompute historical results merely because they lack signatures.
+
+Keep this logic local and small: a signature dictionary, deterministic serialization, and ordinary result I/O. No hash registry, cache manager, automatic environment fingerprint, broad dependency tracker, or new configuration framework. Keep these implementation details in code/docstrings rather than scientific Markdown.
+
+Example section setup, using an actual upstream signature established independently of the expensive calculation cell:
+
+```python
+import hashlib
+import json
+
+window_size = 500
+min_maf = 0.05
+signature_spec = {
+    'analysis': 'variant-windows',
+    'method_version': 1,
+    'inputs': {'variants': variants_signature},
+    'parameters': {'window_bp': window_size, 'min_maf': min_maf},
+}
+signature_json = json.dumps(
+    signature_spec, sort_keys=True, separators=(',', ':'),
+    ensure_ascii=False, allow_nan=False,
+)
+full_digest = hashlib.sha256(signature_json.encode('utf-8')).hexdigest()
+summary_prefix = f'{results_dir}/variant_windows_{full_digest[:16]}'
+summary_file = f'{summary_prefix}.csv.gz'
+metadata_file = f'{summary_prefix}.metadata.json'
+```
+
+The calculation owner records `{'sha256': full_digest, 'specification': signature_spec}` after publishing the table. Its reuse branch compares that record and loads the table; it does not revalidate the source file's timestamp. Plotting uses this section setup and saved table, without recomputing the upstream analysis. The same principle applies to external-tool outputs; the invocation snippet below illustrates launching, not a complete persistence implementation.
 
 ## Calculation and Figure Editing
 
@@ -208,7 +249,7 @@ if not os.path.exists(f'{output_vcf}.tbi'):
     subprocess.run(['bcftools', 'index', '--tbi', output_vcf], check=True)
 ```
 
-Show only the scientific sample-selection rationale in paired narrative before this cell; keep output reuse assumptions in code comments or the interface docstring. This is an invocation pattern, not a mandatory step or a function to copy into every project.
+Show only the scientific sample-selection rationale in paired narrative before this cell; keep output reuse assumptions in code comments or the interface docstring. This is an invocation pattern, not a mandatory step or a complete reuse implementation. When adapting it for reusable outputs, derive `output_vcf` from a scientific signature covering the VCF identity, selected samples, and extraction method, and apply the result-record/completion rules above; an existence-only branch is insufficient. Do not copy its fixed output name into every project.
 
 ## Python Source Style and Interfaces
 
@@ -228,7 +269,7 @@ When interrupted output could be mistaken for a completed stage, write to a temp
 
 Target the current project's known inputs. Document expected fields and formats, then use them directly. Let ordinary library exceptions expose missing files, missing columns, and malformed inputs instead of adding a custom error layer. Avoid speculative format detection, legacy compatibility, automatic column guessing, broad exception handling, and returning empty results after failure.
 
-Keep checks that prevent plausible silent scientific errors: mismatched sample order, ambiguous identifiers used for alignment, incompatible coordinate systems or units, and unintended output replacement. Place each check where the relevant assumption is established, without repeating it in downstream helpers. A documented requirement does not automatically need a runtime assertion. These conventions do not weaken remote execution or resource-policy checks.
+Keep checks that prevent plausible silent scientific errors: mismatched sample order, ambiguous identifiers used for alignment, incompatible coordinate systems or units, and unintended output replacement. Place each check where the relevant assumption is established, without repeating it in downstream helpers. A documented requirement does not automatically need a runtime assertion. For saved-result compatibility, use the scientific signatures above instead of freshness checks. Timestamps are for progress/provenance display only, never invalidation. These conventions do not weaken remote execution or resource-policy checks.
 
 Prefer a sequential flow of input selection, transformation, calculation, and output. Extract helpers for a meaningful independent step, real reuse, or a substantial improvement in readability. Avoid one-use wrappers around a few obvious statements and classes or factories without a concrete state-management need. Core computations can accept data and return results; large-file operations can accept paths when loading everything first would be impractical.
 
